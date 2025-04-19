@@ -5,7 +5,7 @@ import java.util.*;
  * Clase para representar un AFN y convertirlo a AFD.
  * NO debe cambiar los nombres de la clase ni de los métodos existentes.
  */
-public class AFN2{
+public class AFN{
     // Lectura AFN.
     private String direccionAFN;
     private String[] alfabeto;
@@ -33,7 +33,7 @@ public class AFN2{
     //Lectura cuerdas.
     private Boolean cuerdaAceptada;
 
-    public AFN2(String path){
+    public AFN(String path){
         this.direccionAFN = path;
         this.transicionesLambdaAFN = new ArrayList<>();
         this.transicionesEstadosAFN = new ArrayList<>();
@@ -290,7 +290,7 @@ public class AFN2{
         String rutaAFN = "pruebas/afn/prueba1.afn";        // Ruta de entrada del archivo AFN
         String rutaAFD = "pruebas/afd/prueba1.afd"; // Ruta donde se guardará el AFD
     
-        AFN2 automata = new AFN2(rutaAFN);
+        AFN automata = new AFN(rutaAFN);
         automata.toAFD(rutaAFD);
     
         System.out.println("Conversión completada. AFD guardado en: " + rutaAFD);
