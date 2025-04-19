@@ -113,7 +113,6 @@ public class AFN{
                     break;
                 }
             }
-<<<<<<< HEAD
             if (!transicionEncontrada) {
                 estadoActual = 0;
                 break;
@@ -171,78 +170,11 @@ public class AFN{
                     transiciones[i].add(new TransicionAFD(nombreEstadoActual, simbolo, nombreEstadoDestino, esFinal));
 
                     if (esFinal && !estadosFinalAFD.contains(nombreEstadoDestino)) {
-=======
-    
-            if (!transicionEncontrada) {
-                estadoActual = 0; // estado de error
-                break;
-            }
-        }
-    
-        // Evaluamos si el estado final es aceptado
-        return estadosFinalAFD.contains(estadoActual);
-    }
-
-    public void toAFD(String afdPath){
-        this.direccionAFD = afdPath;
-        lecturaAFN();
-        Set<Integer> estadoInicial = new HashSet<>();
-        estadoInicial.add(1);
-        clausura_lambda(estadoInicial);
-        
-        ArrayList<TransicionAFD>[] transicionesEstadoAFD = new ArrayList[alfabeto.length];
-        for (int i = 0; i < alfabeto.length; i++) {
-            transicionesEstadoAFD[i] = new ArrayList<>();
-        }
-    
-        while (!conjuntoCreadosPendientes.isEmpty()) {
-            Set<Integer> estadoActual = conjuntoCreadosPendientes.poll();
-            int nombreEstadoActual = obtenerEstado(estadoActual);
-    
-            for (int i = 0; i < alfabeto.length; i++) {
-                String caracter = alfabeto[i];
-                Set<Integer> conjuntoDestino = new HashSet<>();
-    
-                for (Integer estado : estadoActual) {
-                    if (i < transicionesEstadosAFN.get(estado).size()) {
-                        List<Integer> transiciones = transicionesEstadosAFN.get(estado).get(i);
-                        for (Integer siguiente : transiciones) {
-                            conjuntoDestino.add(siguiente);
-                        }
-                    }
-                }
-    
-                clausura_lambda(conjuntoDestino);
-    
-                // Redirige a estado de error si no hay transición
-                if (conjuntoDestino.isEmpty()) {
-                    TransicionAFD transicionError = new TransicionAFD(nombreEstadoActual, caracter, 0, false);
-                    transicionesEstadoAFD[i].add(transicionError);
-                    continue;
-                }
-    
-                Integer nombreEstadoDestino = obtenerEstado(conjuntoDestino);
-    
-                if (nombreEstadoDestino != null) {
-                    boolean esEstadoFinal = false;
-                    for (Integer estado : conjuntoDestino) {
-                        if (Arrays.asList(estadosFinalAFN).contains(estado)) {
-                            esEstadoFinal = true;
-                            break;
-                        }
-                    }
-    
-                    TransicionAFD transicion = new TransicionAFD(nombreEstadoActual, caracter, nombreEstadoDestino, esEstadoFinal);
-                    transicionesEstadoAFD[i].add(transicion);
-    
-                    if (esEstadoFinal && !estadosFinalAFD.contains(nombreEstadoDestino)) {
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
                         estadosFinalAFD.add(nombreEstadoDestino);
                     }
                 }
             }
         }
-<<<<<<< HEAD
 
         this.transicionesEstadoAFD = transiciones;
         System.out.println("[DEBUG] AFD creado con " + mapaClausuras.size() + " estados válidos");
@@ -250,16 +182,6 @@ public class AFN{
 
     private void lecturaAFN() {
         try (BufferedReader reader = new BufferedReader(new FileReader(direccionAFN))) {
-=======
-    
-        Collections.sort(estadosFinalAFD); // Ordena antes de imprimir
-        escribirAFD(afdPath);
-    }
-    
-
-    private void lecturaAFN(){
-        try(BufferedReader reader = new BufferedReader(new FileReader(direccionAFN))){
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
             alfabeto = reader.readLine().split(",");
             cantidadEstadosAFN = Integer.parseInt(reader.readLine());
             String[] estadosFinal = reader.readLine().split(",");
@@ -269,7 +191,6 @@ public class AFN{
             }
 
             String[] lambdas = reader.readLine().split(",");
-<<<<<<< HEAD
             for (String cell : lambdas) {
                 List<Integer> trans = new ArrayList<>();
                 for (String p : cell.split(";")) {
@@ -279,49 +200,26 @@ public class AFN{
             }
 
             String line;
-=======
-            transicionesLambdaAFN = new ArrayList<>();
-            for (String cell : lambdas) {
-                List<Integer> transicionLambda = new ArrayList<>();
-                for (String p : cell.split(";")) {
-                    if (!p.isEmpty()) {
-                        transicionLambda.add(Integer.parseInt(p.trim()));
-                    }
-                }
-                transicionesLambdaAFN.add(transicionLambda);
-            }
-
-            String line;
-            transicionesEstadosAFN = new ArrayList<>();
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
             while ((line = reader.readLine()) != null) {
                 String[] cells = line.split(",");
                 List<List<Integer>> row = new ArrayList<>();
                 for (String cell : cells) {
                     List<Integer> vals = new ArrayList<>();
                     for (String p : cell.split(";")) {
-<<<<<<< HEAD
-                        if (!p.isEmpty()) vals.add(Integer.parseInt(p.trim()));
-=======
                         if (!p.isEmpty()) {
                             vals.add(Integer.parseInt(p.trim()));
                         }
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
                     }
                     row.add(vals);
                 }
                 transicionesEstadosAFN.add(row);
             }
-<<<<<<< HEAD
         } catch (IOException e) {
-=======
         } catch(IOException e){
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
             System.err.println("Error leyendo AFN: " + direccionAFN);
         }
     }
 
-<<<<<<< HEAD
     private void clausura_lambda(Set<Integer> conjuntoActual) {
         Set<Integer> clausura = new HashSet<>(conjuntoActual);
         Queue<Integer> cola = new LinkedList<>(conjuntoActual);
@@ -348,7 +246,6 @@ public class AFN{
         return null;
     }
 
-=======
 
     public void clausura_lambda(Set<Integer> conjuntoActual){
         Set<Integer> conjuntoNuevo = new LinkedHashSet<>(conjuntoActual);
@@ -385,7 +282,6 @@ public class AFN{
         return null;
     }
     
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
     private int getIndiceSimbolo(char simbolo) {
         for (int i = 0; i < alfabeto.length; i++) {
             if (alfabeto[i].equals(String.valueOf(simbolo))) {
@@ -394,9 +290,7 @@ public class AFN{
         }
         return -1;
     }
-<<<<<<< HEAD
 
-=======
     
     
     private void escribirAFD(String afdPath) {
@@ -459,7 +353,6 @@ public class AFN{
     
 
     //***************************************************
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
     private class TransicionAFD {
         int estadoOrigen;
         String caracter;
@@ -472,7 +365,6 @@ public class AFN{
             this.estadoDestino = destino;
             this.finalOno = finalOno;
         }
-<<<<<<< HEAD
     }
 }
 public static void main(String[] args) {
@@ -498,7 +390,6 @@ public static void main(String[] args) {
     }
 }
 
-=======
         public int getEstadoOrigen(){
             return this.estadoOrigen;
         }
@@ -520,4 +411,6 @@ public static void main(String[] args) {
  * main
  * accept cuerda
  */
->>>>>>> 03d0c0b5d20a5bb6499fb772a50aef826ab789d7
+
+
+ /*Somos el equipo alfa maravilla */
