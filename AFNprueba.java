@@ -169,9 +169,8 @@ public class AFNprueba{
         }
         Set<Integer> estadoNuevo = new HashSet<>(conjuntoNuevo);
         if (estadoNuevo.size() == 1 && estadoNuevo.contains(0)) {
-            // Verificar si ya existe en el mapa
             if (!mapaClausuras.containsKey(0)) {
-                mapaClausuras.put(0, estadoNuevo); // Añadimos con clave 0
+                mapaClausuras.put(0, estadoNuevo);
                 conjuntoCreadosPendientes.add(estadoNuevo);
             }
         } else {
@@ -194,72 +193,77 @@ public class AFNprueba{
         }
         return null;
     }
-    
-    private int getIndiceSimbolo(char simbolo) {
-        for (int i = 0; i < alfabeto.length; i++) {
-            if (alfabeto[i].equals(String.valueOf(simbolo))) {
-                return i;
-            }
+        
+    public void escribirAFD(String nombreArchivo, String path) {
+        if (!nombreArchivo.endsWith(".afd")) {
+            nombreArchivo += ".afd";
         }
-        return -1;
+    
+        File archivo = new File(path + File.separator + nombreArchivo);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivo))) {
+            // Línea 1: alfabeto
+            writer.write(String.join(",", alfabeto));
+            writer.newLine();
+    
+            // Línea 2: cantidad de estados
+            writer.write(String.valueOf(mapaClausuras.size()));
+            writer.newLine();
+    
+            // Línea 3: estados finales del AFD
+            for (int i = 0; i < estadosFinalAFD.size(); i++) {
+                writer.write(String.valueOf(estadosFinalAFD.get(i)));
+                if (i < estadosFinalAFD.size() - 1) {
+                    writer.write(",");
+                }
+            }
+            writer.newLine();
+    
+            // Matriz de transiciones: filas = símbolos, columnas = estados
+            int maxEstado = mapaClausuras.keySet().stream().max(Integer::compareTo).orElse(0);
+            for (int i = 0; i < alfabeto.length; i++) {
+                StringBuilder fila = new StringBuilder();
+                for (int estado = 0; estado <= maxEstado; estado++) {
+                    boolean encontrado = false;
+                    for (TransicionAFD t : transicionesEstadoAFD[i]) {
+                        if (t.getEstadoOrigen() == estado) {
+                            fila.append(t.getEstadoDestino());
+                            encontrado = true;
+                            break;
+                        }
+                    }
+                    if (!encontrado) {
+                        fila.append("");
+                    }
+                    if (estado < maxEstado) {
+                        fila.append(",");
+                    }
+                }
+                writer.write(fila.toString());
+                writer.newLine();
+            }
+    
+            System.out.println("AFD exportado correctamente en: " + archivo.getAbsolutePath());
+    
+        } catch (IOException e) {
+            System.err.println("Error al escribir AFD en archivo: " + e.getMessage());
+        }
     }
     
     
-    private void escribirAFD(String afdPath) {
-    }
     
     
 
 
     public static void main(String[] args) {
-        //*Prueba lectura AFN
-        System.out.println("\n--- Prueba de lectura AFN ---");
-        AFNprueba clase = new AFNprueba("tests/afn/lambda_transitions.afn");
-        //AFNprueba clase = new AFNprueba("pruebas/afn/prueba1.afn");
-        clase.probarLecturaAFN();
-        //*Prueba clausura de lambda
-        //System.out.println("\n--- Prueba de clausura_Lambda ---");
-        //  clase.lecturaAFN();
-        //  Set<Integer> conjuntoEntrada = new LinkedHashSet<>(Arrays.asList(1));
-        //  clase.clausura_lambda(conjuntoEntrada);
-        //  Set<Integer> conjuntoEntrada2 = new LinkedHashSet<>(Arrays.asList(2));
-        //  clase.clausura_lambda(conjuntoEntrada2);
-        //  System.out.println("Clausuras en el mapa:");
-        //  clase.mapaClausuras.forEach((key, value) -> {
-        //      System.out.println("Clave: " + key + " -> Valor: " + value);
-        //  });
-        //*Prueba obtener nombre
-        // System.out.println("\n--- Prueba de obtenerEstado ---");
-        // Set<Integer> conjuntoABuscar = new LinkedHashSet<>(Arrays.asList(4,1));
-        // Integer nombre = clase.obtenerEstado(conjuntoABuscar);
-        // if (nombre != null) {
-        //     System.out.println("El conjunto " + conjuntoABuscar + " tiene el nombre (clave): " + nombre);
-        // } else {
-        //     System.out.println("El conjunto " + conjuntoABuscar + " no fue encontrado en el mapa de clausuras.");
-        // }
-        //*Prueba toAFD
-        System.out.println("\n--- Prueba del método toAFD ---");
-        clase.toAFD("pruebas/afd/prueba1.afd"); // Ruta de salida, aunque escribirAFD está vacío
-
-        // Iteramos por las transiciones construidas
-        System.out.println("Transiciones del AFD:");
-        for (int i = 0; i < clase.alfabeto.length; i++) {
-            System.out.println("Símbolo '" + clase.alfabeto[i] + "':");
-            ArrayList<AFNprueba.TransicionAFD> lista = clase.transicionesEstadoAFD[i];
-            if (lista != null) {
-                for (AFNprueba.TransicionAFD transicion : lista) {
-                    System.out.println("  Desde " + transicion.getEstadoOrigen() + " con '" + transicion.getCaracter() +
-                        "' -> " + transicion.getEstadoDestino() + (transicion.getFinaloNo() ? " (final)" : ""));
-                }
-            } else {
-                System.out.println("  No hay transiciones registradas.");
-            }
-        }
-
-        // Estados finales del AFD
-        System.out.println("Estados finales del AFD: " + clase.estadosFinalAFD);
-        
+        // AFNprueba automata = new AFNprueba("pruebas/afn/prueba1.afn");
+        // automata.toAFD("pruebas/afd");
+        // automata.escribirAFD("prueba", "pruebas/afd");
+        AFNprueba automata = new AFNprueba("tests/afn/lambda_transitions.afn");
+        automata.toAFD("pruebas/afd");
+        automata.escribirAFD("pruebaDef", "tests/afd");
     }
+    
+    
     private void estadosFinales() {
         for (Map.Entry<Integer, Set<Integer>> entry : mapaClausuras.entrySet()) {
             Set<Integer> conjunto = entry.getValue();
@@ -299,31 +303,6 @@ public class AFNprueba{
             return this.finalOno;
         }
 
-    }
-
-
-
-
-    //**************************
-    public void probarLecturaAFN() {
-        this.lecturaAFN();
-        System.out.println("Alfabeto: " + Arrays.toString(alfabeto));
-        System.out.println("Cantidad de estados: " + cantidadEstadosAFN);
-        System.out.println("Estados finales: " + Arrays.toString(estadosFinalAFN));
-        
-        System.out.println("Transiciones lambda:");
-        for (int i = 0; i < transicionesLambdaAFN.size(); i++) {
-            System.out.println("  Estado " + i + " -> " + transicionesLambdaAFN.get(i));
-        }
-    
-        System.out.println("Transiciones por símbolo:");
-        for (int estado = 0; estado < cantidadEstadosAFN; estado++) {
-            System.out.println("  Estado " + estado + ":");
-            for (int simbolo = 0; simbolo < alfabeto.length; simbolo++) {
-                List<List<Integer>> fila = transicionesEstadosAFN.get(simbolo);
-                System.out.println("    Con símbolo '" + alfabeto[simbolo] + "' -> " + fila.get(estado));
-            }
-        }
     }
     
 }
