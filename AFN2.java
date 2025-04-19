@@ -91,9 +91,9 @@ public class AFN2{
         Set<Integer> estadoInicial = new HashSet<>();
         estadoInicial.add(1);
         clausura_lambda(estadoInicial);
-        
-        ArrayList<TransicionAFD>[] transicionesEstadoAFD = new ArrayList[alfabeto.length];
-        for (int i = 0; i < alfabeto.length; i++) {
+
+        transicionesEstadoAFD = new ArrayList[alfabeto.length];
+        for(int i = 0; i<alfabeto.length; i++){
             transicionesEstadoAFD[i] = new ArrayList<>();
         }
     
@@ -227,7 +227,7 @@ public class AFN2{
         }
         return null;
     }
-    
+
     private int getIndiceSimbolo(char simbolo) {
         for (int i = 0; i < alfabeto.length; i++) {
             if (alfabeto[i].equals(String.valueOf(simbolo))) {
