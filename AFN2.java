@@ -15,8 +15,8 @@ public class AFN2{
     private List<List<List<Integer>>> transicionesEstadosAFN;
 
     // Algoritmo de clausura-λ.
-    private Queue<ArrayList<Integer>> conjuntoCreadosPendientes;            
-    private Queue<ArrayList<Integer>> conjuntoCreadosProcesados;           
+    private Queue<Set<Integer>> conjuntoCreadosPendientes;          
+    private Queue<Set<Integer>> conjuntoCreadosProcesados;           
     private Map<Integer, Set<Integer>> mapaClausuras;
     //private Map<Integer, ArrayList<Integer>> mapaAFD = new HashMap<>();
     private int contadorEstadosClausuras = 1;
@@ -26,6 +26,9 @@ public class AFN2{
     private int cantidadEstadosAFD;
     private List<Integer> estadosFinalAFD;
     private Map<Integer, List<List<Integer>>> transicionesEstadosAFD;
+
+    int cantidadFilasMatrizAFD;
+    ArrayList<TransicionAFD>[] transicionesEstadoAFD;
 
     //Lectura cuerdas.
     private Boolean cuerdaAceptada;
@@ -42,6 +45,8 @@ public class AFN2{
 
         this.estadosFinalAFD = new ArrayList<>();
         this.transicionesEstadosAFD = new HashMap<>();
+
+
     }
 
     public boolean accept(String string){
@@ -52,7 +57,66 @@ public class AFN2{
     public void toAFD(String afdPath){
         this.direccionAFD = afdPath;
         lecturaAFN();
+        Set<Integer> estadoInicial = new HashSet<>();
+        estadoInicial.add(1);
+        clausura_lambda(estadoInicial);
+        
+        ArrayList<TransicionAFD>[] transicionesEstadoAFD = new ArrayList[alfabeto.length];
+        for (int i = 0; i < alfabeto.length; i++) {
+            transicionesEstadoAFD[i] = new ArrayList<>();
+        }
+    
+        while (!conjuntoCreadosPendientes.isEmpty()) {
+            Set<Integer> estadoActual = conjuntoCreadosPendientes.poll();
+            int nombreEstadoActual = obtenerEstado(estadoActual);
+    
+            for (int i = 0; i < alfabeto.length; i++) {
+                String caracter = alfabeto[i];
+                Set<Integer> conjuntoDestino = new HashSet<>();
+    
+                for (Integer estado : estadoActual) {
+                    if (i < transicionesEstadosAFN.get(estado).size()) {
+                        List<Integer> transiciones = transicionesEstadosAFN.get(estado).get(i);
+                        for (Integer siguiente : transiciones) {
+                            conjuntoDestino.add(siguiente);
+                        }
+                    }
+                }
+    
+                clausura_lambda(conjuntoDestino);
+    
+                // Redirige a estado de error si no hay transición
+                if (conjuntoDestino.isEmpty()) {
+                    TransicionAFD transicionError = new TransicionAFD(nombreEstadoActual, caracter, 0, false);
+                    transicionesEstadoAFD[i].add(transicionError);
+                    continue;
+                }
+    
+                Integer nombreEstadoDestino = obtenerEstado(conjuntoDestino);
+    
+                if (nombreEstadoDestino != null) {
+                    boolean esEstadoFinal = false;
+                    for (Integer estado : conjuntoDestino) {
+                        if (Arrays.asList(estadosFinalAFN).contains(estado)) {
+                            esEstadoFinal = true;
+                            break;
+                        }
+                    }
+    
+                    TransicionAFD transicion = new TransicionAFD(nombreEstadoActual, caracter, nombreEstadoDestino, esEstadoFinal);
+                    transicionesEstadoAFD[i].add(transicion);
+    
+                    if (esEstadoFinal && !estadosFinalAFD.contains(nombreEstadoDestino)) {
+                        estadosFinalAFD.add(nombreEstadoDestino);
+                    }
+                }
+            }
+        }
+    
+        Collections.sort(estadosFinalAFD); // Ordena antes de imprimir
+        escribirAFD(afdPath);
     }
+    
 
     private void lecturaAFN(){
         try(BufferedReader reader = new BufferedReader(new FileReader(direccionAFN))){
@@ -98,7 +162,7 @@ public class AFN2{
     }
 
 
-    public void clausura_lambda(ArrayList<Integer> conjuntoActual){
+    public void clausura_lambda(Set<Integer> conjuntoActual){
         Set<Integer> conjuntoNuevo = new LinkedHashSet<>(conjuntoActual);
         Queue<Integer> cola = new LinkedList<>(conjuntoActual);
         while (!cola.isEmpty()) {
@@ -119,6 +183,7 @@ public class AFN2{
         if (!yaExiste) {
             mapaClausuras.put(contadorEstadosClausuras, estadoNuevo);
             contadorEstadosClausuras++;
+            conjuntoCreadosPendientes.add(estadoNuevo);
         }
         
     }
@@ -131,10 +196,91 @@ public class AFN2{
         }
         return null;
     }
+    private void escribirAFD(String afdPath) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(afdPath))) {
+            // Línea 1: alfabeto
+            writer.write(String.join(",", alfabeto));
+            writer.newLine();
+    
+            // Línea 2: cantidad de estados del AFD (incluye el estado 0 como estado de error)
+            writer.write(String.valueOf(mapaClausuras.size()));
+            writer.newLine();
+    
+            // Línea 3: estados finales ordenados
+            List<Integer> finalesOrdenados = new ArrayList<>(estadosFinalAFD);
+            Collections.sort(finalesOrdenados);
+            for (int i = 0; i < finalesOrdenados.size(); i++) {
+                writer.write(finalesOrdenados.get(i).toString());
+                if (i < finalesOrdenados.size() - 1) {
+                    writer.write(",");
+                }
+            }
+            writer.newLine();
+    
+            // Transiciones (una fila por estado desde 1 hasta el número total)
+            for (int estado = 1; estado <= mapaClausuras.size(); estado++) {
+                List<String> fila = new ArrayList<>();
+                for (int i = 0; i < alfabeto.length; i++) {
+                    boolean agregado = false;
+                    for (TransicionAFD t : transicionesEstadoAFD[i]) {
+                        if (t.estadoOrigen == estado) {
+                            fila.add(String.valueOf(t.estadoDestino));
+                            agregado = true;
+                            break;
+                        }
+                    }
+                    if (!agregado) {
+                        fila.add("0"); // Estado de error
+                    }
+                }
+                writer.write(String.join(",", fila));
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.err.println("Error al escribir el archivo AFD: " + afdPath);
+        }
+    }
+    
+    
 
 
-    public static void main(String[] args) throws Exception{
-        // TODO: implementar invocación
+    public static void main(String[] args) {
+        String rutaAFN = "pruebas/afn/prueba1.afn";        // Ruta de entrada del archivo AFN
+        String rutaAFD = "pruebas/afd/prueba1.afd"; // Ruta donde se guardará el AFD
+    
+        AFN2 automata = new AFN2(rutaAFN);
+        automata.toAFD(rutaAFD);
+    
+        System.out.println("Conversión completada. AFD guardado en: " + rutaAFD);
+    }
+    
+
+    //***************************************************
+    private class TransicionAFD {
+        int estadoOrigen;
+        String caracter;
+        int estadoDestino;
+        boolean finalOno;
+
+        public TransicionAFD(int origen, String caracter, int destino, boolean finalOno) {
+            this.estadoOrigen = origen;
+            this.caracter = caracter;
+            this.estadoDestino = destino;
+            this.finalOno = finalOno;
+        }
+        public int getEstadoOrigen(){
+            return this.estadoOrigen;
+        }
+        public int getEstadoDestino(){
+            return this.estadoDestino;
+        }
+        public String getCaracter(){
+            return this.caracter;
+        }
+        public boolean getFinaloNo(){
+            return this.finalOno;
+        }
+
     }
 }
 /*NOTAS:
