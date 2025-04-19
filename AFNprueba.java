@@ -103,6 +103,7 @@ public class AFNprueba{
                 
             }
         }
+        estadosFinales();
         Collections.sort(estadosFinalAFD);
 
     }
@@ -167,12 +168,20 @@ public class AFNprueba{
             }
         }
         Set<Integer> estadoNuevo = new HashSet<>(conjuntoNuevo);
-        boolean yaExiste = mapaClausuras.values().stream().anyMatch(lista -> new HashSet<>(lista).equals(estadoNuevo));
+        if (estadoNuevo.size() == 1 && estadoNuevo.contains(0)) {
+            // Verificar si ya existe en el mapa
+            if (!mapaClausuras.containsKey(0)) {
+                mapaClausuras.put(0, estadoNuevo); // Añadimos con clave 0
+                conjuntoCreadosPendientes.add(estadoNuevo);
+            }
+        } else {
+            boolean yaExiste = mapaClausuras.values().stream().anyMatch(lista -> new HashSet<>(lista).equals(estadoNuevo));
 
-        if (!yaExiste) {
-            mapaClausuras.put(contadorEstadosClausuras, estadoNuevo);
-            contadorEstadosClausuras++;
-            conjuntoCreadosPendientes.add(estadoNuevo);
+            if (!yaExiste) {
+                mapaClausuras.put(contadorEstadosClausuras, estadoNuevo);
+                contadorEstadosClausuras++;
+                conjuntoCreadosPendientes.add(estadoNuevo);
+            }
         }
         
     }
@@ -205,7 +214,8 @@ public class AFNprueba{
     public static void main(String[] args) {
         //*Prueba lectura AFN
         System.out.println("\n--- Prueba de lectura AFN ---");
-        AFNprueba clase = new AFNprueba("pruebas/afn/prueba1.afn");
+        AFNprueba clase = new AFNprueba("tests/afn/lambda_transitions.afn");
+        //AFNprueba clase = new AFNprueba("pruebas/afn/prueba1.afn");
         clase.probarLecturaAFN();
         //*Prueba clausura de lambda
         //System.out.println("\n--- Prueba de clausura_Lambda ---");
@@ -249,6 +259,17 @@ public class AFNprueba{
         // Estados finales del AFD
         System.out.println("Estados finales del AFD: " + clase.estadosFinalAFD);
         
+    }
+    private void estadosFinales() {
+        for (Map.Entry<Integer, Set<Integer>> entry : mapaClausuras.entrySet()) {
+            Set<Integer> conjunto = entry.getValue();
+            for (int finalAFN : estadosFinalAFN) {
+                if (conjunto.contains(finalAFN)) {
+                    estadosFinalAFD.add(entry.getKey());
+                    break;
+                }
+            }
+        }
     }
     
 
