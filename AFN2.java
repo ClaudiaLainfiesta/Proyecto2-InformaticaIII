@@ -227,6 +227,17 @@ public class AFN2{
         }
         return null;
     }
+    
+    private int getIndiceSimbolo(char simbolo) {
+        for (int i = 0; i < alfabeto.length; i++) {
+            if (alfabeto[i].equals(String.valueOf(simbolo))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    
     private void escribirAFD(String afdPath) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(afdPath))) {
             // Línea 1: alfabeto
