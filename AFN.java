@@ -42,8 +42,34 @@ public class AFN{
     /**
      * Estub del método accept, implementa la evaluación de la cuerda
      */
-    public boolean accept(String string){
-        // TODO: implementar según proyecto 2
+    public boolean accept(String cuerda){
+        lecturaAFN();
+        Set<String> estadosIniciales = new LinkedHashSet<>(transicionesLambda.get(1)); // Cla -- lamda del estado 1 
+        estadosIniciales.add("1");
+
+        estadosIniciales = clausura_lambda(estadosIniciales); //Buscamos mas cla--lam desde el estado 1 
+
+        Set<String> estadosActuales = new LinkedHashSet<>(estadosIniciales);
+
+        for(int j = 0; j < cuerda.length(); j++){ //Usamos for para recorrer la cuerda simbolo a simbolo
+            char simbolo = cuerda.charAt(j);
+            int indexSimbolo = getIndiceSimbolo(simbolo);
+            if(indexSimbolo == -1)return false; //Simbolo invalido
+
+            Set<String> nuevoEstados = new LinkedHashSet<>();
+            for(String estado : estadosActuales){
+                int e = Integer.parseInt(estado);
+                nuevoEstados.addAll(transicionesEstados.get(indexSimbolo).get(e));
+            }
+            estadosActuales = clausura_lambda(nuevoEstados);
+        }
+
+        for(String estado : estadosActuales){//ciclo en busca de estados finales. 
+            for(String finalEstado : estadosFinalAFN){
+                if(estado.equals(finalEstado))
+                return true;
+            }
+        }
         return false;
     }
 
