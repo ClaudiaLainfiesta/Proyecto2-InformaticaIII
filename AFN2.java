@@ -49,9 +49,40 @@ public class AFN2{
 
     }
 
-    public boolean accept(String string){
-        // TODO: implementar según proyecto 2
-        return false;
+    public boolean accept(String string) {
+        if (transicionesEstadoAFD == null || transicionesEstadoAFD.length == 0) {
+            System.err.println("Error: el AFD no ha sido construido. Ejecuta toAFD() primero.");
+            return false;
+        }
+    
+        int estadoActual = 1; // Estado inicial
+    
+        for (int i = 0; i < string.length(); i++) {
+            char simbolo = string.charAt(i);
+            int idxSimbolo = getIndiceSimbolo(simbolo);
+    
+            if (idxSimbolo == -1) {
+                System.err.println("Símbolo '" + simbolo + "' no pertenece al alfabeto.");
+                return false;
+            }
+    
+            boolean transicionEncontrada = false;
+            for (TransicionAFD t : transicionesEstadoAFD[idxSimbolo]) {
+                if (t.estadoOrigen == estadoActual) {
+                    estadoActual = t.estadoDestino;
+                    transicionEncontrada = true;
+                    break;
+                }
+            }
+    
+            if (!transicionEncontrada) {
+                estadoActual = 0; // estado de error
+                break;
+            }
+        }
+    
+        // Evaluamos si el estado final es aceptado
+        return estadosFinalAFD.contains(estadoActual);
     }
 
     public void toAFD(String afdPath){
